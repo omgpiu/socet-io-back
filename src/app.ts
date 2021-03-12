@@ -1,11 +1,12 @@
 import express from 'express'
 import http from 'http'
-const io = require('socket.io')(http);
+import { Server } from "socket.io";
+
 
 const app = express()
 const server = http.createServer(app)
 
-const socket = io(server)
+const socket = new Server(server)
 
 app.get('/', (req, res) => {
     res.send('Hello, it\'s WS server')
@@ -14,8 +15,8 @@ const messages: Array<any> = []
 
 const usersState = new Map();
 
-socket.on('connection', (socketChannel:any) => {
-    usersState.set(socketChannel, {id: new Date().getTime().toString(), name: 'anonym'} )
+socket.on('connection', (socketChannel: any) => {
+    usersState.set(socketChannel, {id: new Date().getTime().toString(), name: 'anonym'})
 
     socket.on('disconnect', () => {
         usersState.delete(socketChannel);
@@ -34,7 +35,7 @@ socket.on('connection', (socketChannel:any) => {
         socketChannel.broadcast.emit('user-typing', usersState.get(socketChannel))
     });
 
-    socketChannel.on('client-message-sent', (message: string, successFn:any) => {
+    socketChannel.on('client-message-sent', (message: string, successFn: any) => {
         if (typeof message !== 'string' || message.length > 20) {
             successFn("Message length should be less than 20 chars")
             return;
@@ -54,7 +55,7 @@ socket.on('connection', (socketChannel:any) => {
     })
 
     socketChannel.emit('init-messages-published', messages, (data: string) => {
-        console.log("INIT MESSAGES RECEIVED: " + data )
+        console.log("INIT MESSAGES RECEIVED: " + data)
     })
 
     console.log('a user connected')
